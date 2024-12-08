@@ -3,10 +3,13 @@ import * as d3 from "d3";
 
 const Heatmap = ({ data, metric, onCellClick }) => {
   const svgRef = useRef();
+  const legendRef = useRef(); // For the legend
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
+    const legendSvg = d3.select(legendRef.current);
     svg.selectAll("*").remove();
+    legendSvg.selectAll("*").remove();
 
     const width = 800;
     const height = 400;
@@ -32,7 +35,12 @@ const Heatmap = ({ data, metric, onCellClick }) => {
     // Scales
     const x = d3.scaleBand().domain(years).range([margin.left, width - margin.right]).padding(0.1);
     const y = d3.scaleBand().domain(countries).range([margin.top, height - margin.bottom]).padding(0.1);
-    const color = d3.scaleSequential(d3.interpolateGreens).domain(d3.extent(data, (d) => +d[metric]));
+
+    // Separate color scales
+    const color =
+      metric === "Population"
+        ? d3.scaleSequential(d3.interpolateGreens).domain(d3.extent(data, (d) => +d[metric]))
+        : d3.scaleSequential(d3.interpolateBlues).domain(d3.extent(data, (d) => +d[metric]));
 
     // Create heatmap rectangles
     svg
@@ -71,9 +79,57 @@ const Heatmap = ({ data, metric, onCellClick }) => {
       .attr("font-size", "14px")
       .attr("font-weight", "bold")
       .text("Countries");
+
+    // Add dynamic legend
+    const legendWidth = 300;
+    const legendHeight = 20;
+    const legendScale = d3
+      .scaleLinear()
+      .domain(color.domain())
+      .range([0, legendWidth]);
+
+    const legendAxis = d3.axisBottom(legendScale).ticks(5);
+
+    const gradientId = "heatmap-gradient";
+
+    // Add gradient to legend
+    legendSvg
+      .append("defs")
+      .append("linearGradient")
+      .attr("id", gradientId)
+      .selectAll("stop")
+      .data(color.ticks().map((t, i, nodes) => ({ offset: `${(i / (nodes.length - 1)) * 100}%`, color: color(t) })))
+      .join("stop")
+      .attr("offset", (d) => d.offset)
+      .attr("stop-color", (d) => d.color);
+
+    legendSvg
+      .append("rect")
+      .attr("width", legendWidth)
+      .attr("height", legendHeight)
+      .style("fill", `url(#${gradientId})`);
+
+    legendSvg
+      .append("g")
+      .attr("transform", `translate(0,${legendHeight})`)
+      .call(legendAxis);
+
+    legendSvg
+      .append("text")
+      .attr("x", legendWidth / 2)
+      .attr("y", -10)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .attr("font-weight", "bold")
+      .text(metric);
   }, [data, metric, onCellClick]);
 
-  return <svg ref={svgRef} width={800} height={400}></svg>;
+  return (
+    <div>
+      <svg ref={svgRef} width={800} height={400}></svg>
+      <svg ref={legendRef} width={300} height={50}></svg>
+    </div>
+  );
 };
 
 export default Heatmap;

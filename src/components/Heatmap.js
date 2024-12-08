@@ -8,6 +8,7 @@ const Heatmap = ({ onGridClick }) => {
   const svgRef = useRef();
   const [data, setData] = useState([]);
   const [metric, setMetric] = useState("Population"); // Default metric
+  const [annotation, setAnnotation] = useState(null); // State for annotation box
 
   useEffect(() => {
     // Load data from the URL
@@ -77,7 +78,15 @@ const Heatmap = ({ onGridClick }) => {
       .attr("width", (d) => size(d.Total)) // Size based on CO2 emissions
       .attr("height", (d) => size(d.Total))
       .attr("fill", (d) => color(Math.log10(d[metric] || 1))) // Log-transformed color
-      .on("click", (event, d) => onGridClick(d));
+      .on("click", (event, d) => {
+        // Update annotation box on click
+        setAnnotation({
+          x: event.pageX,
+          y: event.pageY,
+          data: d,
+        });
+        onGridClick(d); // Trigger parent click handler
+      });
 
     // Add x-axis
     svg
@@ -107,7 +116,7 @@ const Heatmap = ({ onGridClick }) => {
   };
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
       {/* Dropdown Menu */}
       <div style={{ marginBottom: "20px" }}>
         <label htmlFor="metric-select" style={{ marginRight: "10px" }}>
@@ -121,6 +130,28 @@ const Heatmap = ({ onGridClick }) => {
 
       {/* Heatmap SVG */}
       <svg ref={svgRef} width={800} height={400}></svg>
+
+      {/* Annotation Box */}
+      {annotation && (
+        <div
+          style={{
+            position: "absolute",
+            top: annotation.y + 10,
+            left: annotation.x + 10,
+            backgroundColor: "white",
+            border: "1px solid black",
+            padding: "10px",
+            borderRadius: "5px",
+            boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.3)",
+          }}
+        >
+          <p><strong>Country:</strong> {annotation.data.Country}</p>
+          <p><strong>Year:</strong> {annotation.data.Year}</p>
+          <p><strong>GDP:</strong> {annotation.data.GDP}</p>
+          <p><strong>Population:</strong> {annotation.data.Population}</p>
+          <p><strong>CO2 Emissions:</strong> {annotation.data.Total}</p>
+        </div>
+      )}
     </div>
   );
 };

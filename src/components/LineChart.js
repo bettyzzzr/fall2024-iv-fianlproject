@@ -10,7 +10,7 @@ const LineChart = ({ data }) => {
 
     const width = 800;
     const height = 400;
-    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+    const margin = { top: 20, right: 60, bottom: 50, left: 60 };
 
     // Define x-axis (Year)
     const x = d3
@@ -18,13 +18,17 @@ const LineChart = ({ data }) => {
       .domain(d3.extent(data, (d) => new Date(d.Year)))
       .range([margin.left, width - margin.right]);
 
-    // Define y-axis (shared for GDP and Total)
-    const y = d3
+    // Define y-axis for GDP
+    const yGDP = d3
       .scaleLinear()
-      .domain([
-        0,
-        d3.max(data, (d) => Math.max(+d.GDP, +d.Total)),
-      ])
+      .domain([0, d3.max(data, (d) => +d.GDP)])
+      .nice()
+      .range([height - margin.bottom, margin.top]);
+
+    // Define y-axis for Total Emission
+    const yTotal = d3
+      .scaleLinear()
+      .domain([0, d3.max(data, (d) => +d.Total)])
       .nice()
       .range([height - margin.bottom, margin.top]);
 
@@ -32,13 +36,13 @@ const LineChart = ({ data }) => {
     const gdpLine = d3
       .line()
       .x((d) => x(new Date(d.Year)))
-      .y((d) => y(+d.GDP));
+      .y((d) => yGDP(+d.GDP));
 
     // Line generator for Total Emission
     const totalLine = d3
       .line()
       .x((d) => x(new Date(d.Year)))
-      .y((d) => y(+d.Total));
+      .y((d) => yTotal(+d.Total));
 
     // Draw GDP line (black)
     svg
@@ -67,14 +71,34 @@ const LineChart = ({ data }) => {
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end");
 
-    // Add y-axis
+    // Add y-axis for GDP
     svg
       .append("g")
       .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(yGDP))
+      .append("text")
+      .attr("x", -height / 2)
+      .attr("y", -50)
+      .attr("transform", "rotate(-90)")
+      .attr("fill", "black")
+      .attr("text-anchor", "middle")
+      .text("GDP (Trillions)");
+
+    // Add y-axis for Total Emission
+    svg
+      .append("g")
+      .attr("transform", `translate(${width - margin.right},0)`)
+      .call(d3.axisRight(yTotal))
+      .append("text")
+      .attr("x", height / 2)
+      .attr("y", 40)
+      .attr("transform", "rotate(-90)")
+      .attr("fill", "blue")
+      .attr("text-anchor", "middle")
+      .text("Total Emission (MT)");
 
     // Add legend
-    const legend = svg.append("g").attr("transform", `translate(${width - 150}, ${margin.top})`);
+    const legend = svg.append("g").attr("transform", `translate(${width - 200}, ${margin.top})`);
 
     legend
       .append("rect")

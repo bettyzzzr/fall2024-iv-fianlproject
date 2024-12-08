@@ -1,11 +1,30 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
-const Heatmap = ({ data }) => {
+const dataUrl =
+  "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project-data/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv";
+
+const Heatmap = () => {
   const svgRef = useRef();
+  const [data, setData] = useState([]);
   const [metric, setMetric] = useState("Population"); // Default metric
 
   useEffect(() => {
+    // Load data from the URL
+    d3.csv(dataUrl).then((csvData) => {
+      csvData.forEach((d) => {
+        d.Year = +d.Year; // Ensure Year is numeric
+        d.Total = +d.Total;
+        d.Population = +d.Population;
+        d.GDP = +d.GDP;
+      });
+      setData(csvData);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (data.length === 0) return;
+
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -13,7 +32,7 @@ const Heatmap = ({ data }) => {
     const height = 400;
     const margin = { top: 50, right: 20, bottom: 50, left: 100 };
 
-    // Filter years from 2003 to 2023 and sort
+    // Extract years dynamically from the dataset
     const years = Array.from(new Set(data.map((d) => d.Year)))
       .filter((year) => year >= 2003 && year <= 2023)
       .sort((a, b) => a - b);
@@ -51,16 +70,13 @@ const Heatmap = ({ data }) => {
     svg
       .append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y")))
+      .call(d3.axisBottom(x).tickFormat(d3.format("d")))
       .selectAll("text")
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end");
 
     // Add y-axis
-    svg
-      .append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y));
+    svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
 
     // Add title for y-axis
     svg
@@ -73,7 +89,6 @@ const Heatmap = ({ data }) => {
       .text("Countries");
   }, [data, metric]); // Update when data or metric changes
 
-  // Dropdown change handler
   const handleMetricChange = (event) => {
     setMetric(event.target.value);
   };

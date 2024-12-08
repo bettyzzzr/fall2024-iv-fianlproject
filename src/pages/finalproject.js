@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { csv } from "d3";
-import { Container, Row, Col } from "react-bootstrap";
 import Heatmap from "../components/Heatmap";
 import PieChart from "../components/PieChart";
 import LineChart from "../components/LineChart";
+import styles from './final_project.module.css';
 
 const dataUrl =
   "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv";
@@ -24,26 +24,30 @@ export default function Home() {
   };
 
   return (
-    <Container>
-      <Row>
-        <Col>
-          <h1>Population & GDP Analysis</h1>
-          {data.length > 0 ? (
-            <Heatmap data={data} metric="Population" onCellClick={handleCellClick} />
-          ) : (
-            <p>Loading data...</p>
-          )}
-        </Col>
-      </Row>
-      <Row>
-        <Col>
+    <div className={styles.container}>
+      {/* Heatmap Section */}
+      <div className={styles.Heatmap}>
+        <h1>Population & GDP Analysis</h1>
+        {data.length > 0 ? (
+          <Heatmap data={data} metric="Population" onCellClick={handleCellClick} />
+        ) : (
+          <p>Loading data...</p>
+        )}
+      </div>
+
+      {/* Right-side Charts Section */}
+      <div className={styles["right-charts"]}>
+        {/* Pie Chart */}
+        <div className={styles.PieChart}>
           {selectedData && <PieChart data={preparePieChartData(selectedData)} />}
-        </Col>
-        <Col>
+        </div>
+
+        {/* Line Chart */}
+        <div className={styles.LineChart}>
           {selectedData && <LineChart data={prepareLineChartData(data, selectedData)} />}
-        </Col>
-      </Row>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 }
 

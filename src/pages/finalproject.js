@@ -3,7 +3,7 @@ import { csv } from "d3";
 import Heatmap from "../components/Heatmap";
 import PieChart from "../components/PieChart";
 import LineChart from "../components/LineChart";
-import styles from './final_project.module.css';
+import styles from '../styles/final_project.module.css';
 
 const dataUrl =
   "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv";
@@ -27,7 +27,7 @@ export default function Home() {
     <div className={styles.container}>
       {/* Heatmap Section */}
       <div className={styles.Heatmap}>
-        <h1>Population & GDP Analysis</h1>
+        <h1>Fossil CO2 Analysis</h1>
         {data.length > 0 ? (
           <Heatmap data={data} metric="Population" onCellClick={handleCellClick} />
         ) : (

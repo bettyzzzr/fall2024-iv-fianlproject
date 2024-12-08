@@ -22,7 +22,7 @@
   /* Pie chart (top half) */
   .PieChart {
     height: 50%;
-    border-bottom: 1px solid #ddd; /* Optional separator */
+    border-bottom: 5px solid #ddd; /* Optional separator */
   }
   
   /* Line chart (bottom half) */

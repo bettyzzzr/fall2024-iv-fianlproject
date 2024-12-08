@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
+import Dropdown from "./dropdown";
 
 const Heatmap = ({ data, metric, onCellClick }) => {
   const svgRef = useRef();

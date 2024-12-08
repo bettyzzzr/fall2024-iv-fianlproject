@@ -4,7 +4,7 @@ import * as d3 from "d3";
 const dataUrl =
   "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project-data/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv";
 
-const Heatmap = () => {
+const Heatmap = ({ onCellClick }) => {
   const svgRef = useRef();
   const [data, setData] = useState([]);
   const [metric, setMetric] = useState("Population"); // Default metric
@@ -64,7 +64,11 @@ const Heatmap = () => {
       .attr("y", (d) => y(d.Country))
       .attr("width", x.bandwidth())
       .attr("height", y.bandwidth())
-      .attr("fill", (d) => color(+d[metric]));
+      .attr("fill", (d) => color(+d[metric]))
+      .on("click", (event, d) => {
+        // Trigger callback with selected cell data
+        onCellClick(d);
+      });
 
     // Add x-axis
     svg
@@ -87,7 +91,7 @@ const Heatmap = () => {
       .attr("font-size", "14px")
       .attr("font-weight", "bold")
       .text("Countries");
-  }, [data, metric]); // Update when data or metric changes
+  }, [data, metric, onCellClick]); // Update when data, metric, or click callback changes
 
   const handleMetricChange = (event) => {
     setMetric(event.target.value);

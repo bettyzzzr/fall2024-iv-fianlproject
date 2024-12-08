@@ -4,22 +4,24 @@ import * as d3 from "d3";
 const dataUrl =
   "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project-data/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv";
 
-const Heatmap = ({ onCellClick }) => {
+const Heatmap = ({ onGridClick }) => {
   const svgRef = useRef();
   const [data, setData] = useState([]);
   const [metric, setMetric] = useState("Population"); // Default metric
 
   useEffect(() => {
     // Load data from the URL
-    d3.csv(dataUrl).then((csvData) => {
-      csvData.forEach((d) => {
-        d.Year = +d.Year; // Ensure Year is numeric
-        d.Total = +d.Total; // CO2 emissions
-        d.Population = +d.Population;
-        d.GDP = +d.GDP;
-      });
-      setData(csvData);
-    });
+    d3.csv(dataUrl)
+      .then((csvData) => {
+        csvData.forEach((d) => {
+          d.Year = +d.Year; // Ensure Year is numeric
+          d.Total = +d.Total;
+          d.Population = +d.Population;
+          d.GDP = +d.GDP;
+        });
+        setData(csvData);
+      })
+      .catch((error) => console.error("Error loading data:", error));
   }, []);
 
   useEffect(() => {
@@ -53,10 +55,18 @@ const Heatmap = ({ onCellClick }) => {
     const x = d3.scaleBand().domain(years).range([margin.left, width - margin.right]).padding(0.1);
     const y = d3.scaleBand().domain(countries).range([margin.top, height - margin.bottom]).padding(0.1);
 
-    const color = d3.scaleSequential(d3.interpolateGreens).domain(d3.extent(data, (d) => +d[metric]));
-    const size = d3.scaleSqrt().domain(d3.extent(data, (d) => d.Total)).range([2, x.bandwidth() / 2]);
+    // Use a logarithmic scale for smoother color transitions
+    const color = d3
+      .scaleSequential(d3.interpolateGreens)
+      .domain(d3.extent(data, (d) => Math.log10(d[metric] || 1))); // Avoid log(0)
 
-    // Create grid-based heatmap
+    // Use size scale for CO2 emissions
+    const size = d3
+      .scaleSqrt()
+      .domain(d3.extent(data, (d) => d.Total))
+      .range([2, x.bandwidth() / 2]);
+
+    // Create heatmap squares
     svg
       .append("g")
       .selectAll("rect")
@@ -64,25 +74,10 @@ const Heatmap = ({ onCellClick }) => {
       .join("rect")
       .attr("x", (d) => x(d.Year))
       .attr("y", (d) => y(d.Country))
-      .attr("width", x.bandwidth())
-      .attr("height", y.bandwidth())
-      .attr("fill", "white"); // Background for the grid
-
-    // Add squares for each cell
-    svg
-      .append("g")
-      .selectAll("rect")
-      .data(data.filter((d) => years.includes(d.Year)))
-      .join("rect")
-      .attr("x", (d) => x(d.Year) + x.bandwidth() / 2 - size(d.Total) / 2) // Center the square
-      .attr("y", (d) => y(d.Country) + y.bandwidth() / 2 - size(d.Total) / 2) // Center the square
-      .attr("width", (d) => size(d.Total))
+      .attr("width", (d) => size(d.Total)) // Size based on CO2 emissions
       .attr("height", (d) => size(d.Total))
-      .attr("fill", (d) => color(+d[metric]))
-      .on("click", (event, d) => {
-        // Trigger callback with selected cell data
-        onCellClick(d);
-      });
+      .attr("fill", (d) => color(Math.log10(d[metric] || 1))) // Log-transformed color
+      .on("click", (event, d) => onGridClick(d));
 
     // Add x-axis
     svg
@@ -105,7 +100,7 @@ const Heatmap = ({ onCellClick }) => {
       .attr("font-size", "14px")
       .attr("font-weight", "bold")
       .text("Countries");
-  }, [data, metric, onCellClick]); // Update when data, metric, or click callback changes
+  }, [data, metric, onGridClick]); // Update when data or metric changes
 
   const handleMetricChange = (event) => {
     setMetric(event.target.value);

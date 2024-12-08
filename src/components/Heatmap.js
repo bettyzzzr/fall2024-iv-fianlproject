@@ -61,13 +61,13 @@ const Heatmap = ({ onCellClick }) => {
       .range([2, x.bandwidth() / 2]);
 
     // Create heatmap squares
-    svg
+    const squares = svg
       .append("g")
       .selectAll("rect")
       .data(data.filter((d) => years.includes(d.Year)))
       .join("rect")
-      .attr("x", (d) => x(d.Year))
-      .attr("y", (d) => y(d.Country))
+      .attr("x", (d) => x(d.Year) + x.bandwidth() / 4)
+      .attr("y", (d) => y(d.Country) + y.bandwidth() / 4)
       .attr("width", (d) => size(d.Total))
       .attr("height", (d) => size(d.Total))
       .attr("fill", (d) => color(d[metric]))

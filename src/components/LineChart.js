@@ -82,7 +82,7 @@ const LineChart = ({ data }) => {
       .attr("transform", "rotate(-90)")
       .attr("fill", "black")
       .attr("text-anchor", "middle")
-      .text("GDP (Trillions)");
+      .text("GDP (One Hundred Million)");
 
     // Add y-axis for Total Emission
     svg

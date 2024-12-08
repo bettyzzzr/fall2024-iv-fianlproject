@@ -49,12 +49,33 @@ const Heatmap = ({ onCellClick }) => {
         return totalB - totalA;
       });
 
-    // Scales
-    const x = d3.scaleBand().domain(years).range([margin.left, width - margin.right]).padding(0.1);
-    const y = d3.scaleBand().domain(countries).range([margin.top, height - margin.bottom]).padding(0.1);
+    // Apply a logarithmic transformation for smoother color scaling
+    const logTransformedMetric = data.map((d) => ({
+      ...d,
+      logValue: Math.log10(d[metric] + 1), // Adding 1 to handle zero values
+    }));
 
-    const color = d3.scaleSequential(d3.interpolateGreens).domain(d3.extent(data, (d) => +d[metric]));
-    const size = d3.scaleSqrt().domain(d3.extent(data, (d) => d.Total)).range([2, x.bandwidth() / 2]);
+    const color = d3
+      .scaleSequential(d3.interpolateGreens)
+      .domain(d3.extent(logTransformedMetric, (d) => d.logValue));
+
+    const size = d3
+      .scaleSqrt()
+      .domain(d3.extent(data, (d) => d.Total))
+      .range([2, d3.scaleBand().range([0, width - margin.right]).padding(0.1)]);
+
+    // Scales
+    const x = d3
+      .scaleBand()
+      .domain(years)
+      .range([margin.left, width - margin.right])
+      .padding(0.1);
+
+    const y = d3
+      .scaleBand()
+      .domain(countries)
+      .range([margin.top, height - margin.bottom])
+      .padding(0.1);
 
     // Create grid-based heatmap
     svg
@@ -72,13 +93,13 @@ const Heatmap = ({ onCellClick }) => {
     svg
       .append("g")
       .selectAll("rect")
-      .data(data.filter((d) => years.includes(d.Year)))
+      .data(logTransformedMetric.filter((d) => years.includes(d.Year)))
       .join("rect")
       .attr("x", (d) => x(d.Year) + x.bandwidth() / 2 - size(d.Total) / 2) // Center the square
       .attr("y", (d) => y(d.Country) + y.bandwidth() / 2 - size(d.Total) / 2) // Center the square
       .attr("width", (d) => size(d.Total))
       .attr("height", (d) => size(d.Total))
-      .attr("fill", (d) => color(+d[metric]))
+      .attr("fill", (d) => color(d.logValue))
       .on("click", (event, d) => {
         // Trigger callback with selected cell data
         onCellClick(d);

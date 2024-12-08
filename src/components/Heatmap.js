@@ -14,7 +14,7 @@ const Heatmap = ({ onCellClick }) => {
     d3.csv(dataUrl).then((csvData) => {
       csvData.forEach((d) => {
         d.Year = +d.Year; // Ensure Year is numeric
-        d.Total = +d.Total;
+        d.Total = +d.Total; // CO2 emissions
         d.Population = +d.Population;
         d.GDP = +d.GDP;
       });
@@ -52,9 +52,11 @@ const Heatmap = ({ onCellClick }) => {
     // Scales
     const x = d3.scaleBand().domain(years).range([margin.left, width - margin.right]).padding(0.1);
     const y = d3.scaleBand().domain(countries).range([margin.top, height - margin.bottom]).padding(0.1);
-    const color = d3.scaleSequential(d3.interpolateGreens).domain(d3.extent(data, (d) => +d[metric]));
 
-    // Create heatmap rectangles
+    const color = d3.scaleSequential(d3.interpolateGreens).domain(d3.extent(data, (d) => +d[metric]));
+    const size = d3.scaleSqrt().domain(d3.extent(data, (d) => d.Total)).range([2, x.bandwidth() / 2]);
+
+    // Create grid-based heatmap
     svg
       .append("g")
       .selectAll("rect")
@@ -64,6 +66,18 @@ const Heatmap = ({ onCellClick }) => {
       .attr("y", (d) => y(d.Country))
       .attr("width", x.bandwidth())
       .attr("height", y.bandwidth())
+      .attr("fill", "white"); // Background for the grid
+
+    // Add squares for each cell
+    svg
+      .append("g")
+      .selectAll("rect")
+      .data(data.filter((d) => years.includes(d.Year)))
+      .join("rect")
+      .attr("x", (d) => x(d.Year) + x.bandwidth() / 2 - size(d.Total) / 2) // Center the square
+      .attr("y", (d) => y(d.Country) + y.bandwidth() / 2 - size(d.Total) / 2) // Center the square
+      .attr("width", (d) => size(d.Total))
+      .attr("height", (d) => size(d.Total))
       .attr("fill", (d) => color(+d[metric]))
       .on("click", (event, d) => {
         // Trigger callback with selected cell data

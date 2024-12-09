@@ -91,14 +91,14 @@ const Heatmap = ({ onGridClick }) => {
     // Add x-axis
     svg
       .append("g")
-      .attr("transform", translate(0,${height - margin.bottom}))
+      .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(x).tickFormat(d3.format("d")))
       .selectAll("text")
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end");
 
     // Add y-axis
-    svg.append("g").attr("transform", translate(${margin.left},0)).call(d3.axisLeft(y));
+    svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y));
 
     // Add title for y-axis
     svg

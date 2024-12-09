@@ -18,7 +18,7 @@ export default function Home() {
         d.Year = +d.Year; // Ensure Year is numeric
         d.Total = +d.Total;
         d.Population = +d.Population;
-        d.GDP = +d["GDP(usd/one trillion)"]; // Normalize GDP key to match dataset
+        d.GDP = +d["GDP"]; // Normalize GDP key to match dataset
         d.Coal = +d.Coal;
         d.Oil = +d.Oil;
         d.Gas = +d.Gas;

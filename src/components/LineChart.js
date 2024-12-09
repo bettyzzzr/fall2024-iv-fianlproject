@@ -14,28 +14,28 @@ const LineChart = ({ data }) => {
     const height = 400;
     const margin = { top: 20, right: 60, bottom: 50, left: 60 };
 
-    // 确保数据完整性：为缺失值设置默认值
+    // 预处理数据
     const preparedData = data.map((d) => ({
-      Year: d.Year,
+      Year: d.Year.toString(), // 确保 Year 是字符串
       GDP: isNaN(+d.GDP) ? 0 : +d.GDP,
       Total: isNaN(+d.Total) ? 0 : +d.Total,
     }));
+
     console.log("Prepared Data:", preparedData);
 
-    // 定义 x 轴 (Year)
+    // 定义 x 轴
     const x = d3
       .scaleTime()
-      .domain(d3.extent(preparedData, (d) => new Date(d.Year.toString())))
+      .domain(d3.extent(preparedData, (d) => new Date(d.Year)))
       .range([margin.left, width - margin.right]);
 
-    // 定义 y 轴 - GDP
+    // 定义 y 轴
     const yGDP = d3
       .scaleLinear()
       .domain([0, d3.max(preparedData, (d) => d.GDP)])
       .nice()
       .range([height - margin.bottom, margin.top]);
 
-    // 定义 y 轴 - Total Emission
     const yTotal = d3
       .scaleLinear()
       .domain([0, d3.max(preparedData, (d) => d.Total)])
@@ -47,6 +47,8 @@ const LineChart = ({ data }) => {
       .line()
       .x((d) => x(new Date(d.Year)))
       .y((d) => yGDP(d.GDP));
+
+    console.log("GDP Line Path:", gdpLine(preparedData));
 
     svg
       .append("path")
@@ -62,6 +64,8 @@ const LineChart = ({ data }) => {
       .x((d) => x(new Date(d.Year)))
       .y((d) => yTotal(d.Total));
 
+    console.log("Total Line Path:", totalLine(preparedData));
+
     svg
       .append("path")
       .datum(preparedData)
@@ -70,7 +74,7 @@ const LineChart = ({ data }) => {
       .attr("stroke-width", 2)
       .attr("d", totalLine);
 
-    // 添加 x 轴
+    // 添加坐标轴
     svg
       .append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
@@ -79,7 +83,6 @@ const LineChart = ({ data }) => {
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end");
 
-    // 添加 y 轴 - GDP
     svg
       .append("g")
       .attr("transform", `translate(${margin.left},0)`)
@@ -92,7 +95,6 @@ const LineChart = ({ data }) => {
       .attr("text-anchor", "middle")
       .text("GDP (Hundred Million)");
 
-    // 添加 y 轴 - Total Emission
     svg
       .append("g")
       .attr("transform", `translate(${width - margin.right},0)`)
@@ -104,41 +106,6 @@ const LineChart = ({ data }) => {
       .attr("fill", "blue")
       .attr("text-anchor", "middle")
       .text("Total Emission (MT)");
-
-    // 添加图例
-    const legend = svg
-      .append("g")
-      .attr("transform", `translate(${width - 150}, ${margin.top})`);
-
-    legend
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("width", 15)
-      .attr("height", 15)
-      .attr("fill", "black");
-
-    legend
-      .append("text")
-      .attr("x", 20)
-      .attr("y", 12)
-      .text("GDP")
-      .style("font-size", "12px");
-
-    legend
-      .append("rect")
-      .attr("x", 0)
-      .attr("y", 25)
-      .attr("width", 15)
-      .attr("height", 15)
-      .attr("fill", "blue");
-
-    legend
-      .append("text")
-      .attr("x", 20)
-      .attr("y", 37)
-      .text("Total Emission")
-      .style("font-size", "12px");
   }, [data]);
 
   return <svg ref={svgRef} width={800} height={400}></svg>;

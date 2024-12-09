@@ -6,8 +6,7 @@ import LineChart from "../components/LineChart";
 import styles from '../styles/final_project.module.css';
 
 const dataUrl =
-  "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv";
-
+ "https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project/refs/heads/main/15国碳排放.csv"
 export default function Home() {
   const [data, setData] = useState([]);
   const [selectedData, setSelectedData] = useState(null);
@@ -29,7 +28,7 @@ export default function Home() {
       <div className={styles.Heatmap}>
         <h1>Fossil CO2 Analysis</h1>
         {data.length > 0 ? (
-          <Heatmap data={data} metric="Population" onCellClick={handleCellClick} />
+          <Heatmap data={data} metric="Population" onGridClick={handleCellClick} />
         ) : (
           <p>Loading data...</p>
         )}
@@ -52,20 +51,21 @@ export default function Home() {
 }
 
 function preparePieChartData(selectedData) {
-  const { Coal, Oil, Gas, Cement, Flaring, Other } = selectedData;
-  const total = Coal + Oil + Gas + Cement + Flaring + Other;
+  const { Coal, Oil, Gas, Cement, Flaring, Other, Total } = selectedData;
+
   return [
-    { label: "Coal", value: Coal, percentage: ((Coal / total) * 100).toFixed(2) },
-    { label: "Oil", value: Oil, percentage: ((Oil / total) * 100).toFixed(2) },
-    { label: "Gas", value: Gas, percentage: ((Gas / total) * 100).toFixed(2) },
-    { label: "Cement", value: Cement, percentage: ((Cement / total) * 100).toFixed(2) },
-    { label: "Flaring", value: Flaring, percentage: ((Flaring / total) * 100).toFixed(2) },
-    { label: "Other", value: Other, percentage: ((Other / total) * 100).toFixed(2) },
+    { label: "Coal", value: Coal, percentage: ((Coal / Total) * 100).toFixed(2) },
+    { label: "Oil", value: Oil, percentage: ((Oil / Total) * 100).toFixed(2) },
+    { label: "Gas", value: Gas, percentage: ((Gas / Total) * 100).toFixed(2) },
+    { label: "Cement", value: Cement, percentage: ((Cement / Total) * 100).toFixed(2) },
+    { label: "Flaring", value: Flaring, percentage: ((Flaring / Total) * 100).toFixed(2) },
+    { label: "Other", value: Other, percentage: ((Other / Total) * 100).toFixed(2) },
   ];
 }
+
 
 function prepareLineChartData(data, selectedData) {
   return data
     .filter((d) => d.Country === selectedData.Country)
-    .map((d) => ({ Year: d.Year, value: d.Total, GDP: d["GDP(usd/one trillion)"] }));
+    .map((d) => ({ Year: d.Year, Total: d['Total'], GDP: d["GDP"] }));
 }

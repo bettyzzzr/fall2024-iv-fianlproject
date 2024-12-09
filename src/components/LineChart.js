@@ -5,6 +5,8 @@ const LineChart = ({ data }) => {
   const svgRef = useRef();
 
   useEffect(() => {
+    console.log("Raw Data passed to LineChart:", data);
+
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -12,57 +14,63 @@ const LineChart = ({ data }) => {
     const height = 400;
     const margin = { top: 20, right: 60, bottom: 50, left: 60 };
 
-    // Define x-axis (Year)
+    // 确保数据完整性：为缺失值设置默认值
+    const preparedData = data.map((d) => ({
+      Year: d.Year,
+      GDP: isNaN(+d.GDP) ? 0 : +d.GDP,
+      Total: isNaN(+d.Total) ? 0 : +d.Total,
+    }));
+    console.log("Prepared Data:", preparedData);
+
+    // 定义 x 轴 (Year)
     const x = d3
       .scaleTime()
-      .domain(d3.extent(data, (d) => new Date(d.Year)))
+      .domain(d3.extent(preparedData, (d) => new Date(d.Year.toString())))
       .range([margin.left, width - margin.right]);
 
-    // Define y-axis for GDP
+    // 定义 y 轴 - GDP
     const yGDP = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => +d.GDP)])
+      .domain([0, d3.max(preparedData, (d) => d.GDP)])
       .nice()
       .range([height - margin.bottom, margin.top]);
 
-    // Define y-axis for Total Emission
+    // 定义 y 轴 - Total Emission
     const yTotal = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => +d.Total)])
+      .domain([0, d3.max(preparedData, (d) => d.Total)])
       .nice()
       .range([height - margin.bottom, margin.top]);
 
-    // Line generator for GDP
+    // 绘制 GDP 曲线
     const gdpLine = d3
       .line()
       .x((d) => x(new Date(d.Year)))
-      .y((d) => yGDP(+d.GDP));
+      .y((d) => yGDP(d.GDP));
 
-    // Line generator for Total Emission
-    const totalLine = d3
-      .line()
-      .x((d) => x(new Date(d.Year)))
-      .y((d) => yTotal(+d.Total));
-
-    // Draw GDP line (black)
     svg
       .append("path")
-      .datum(data)
+      .datum(preparedData)
       .attr("fill", "none")
       .attr("stroke", "black")
       .attr("stroke-width", 2)
       .attr("d", gdpLine);
 
-    // Draw Total Emission line (blue)
+    // 绘制 Total Emission 曲线
+    const totalLine = d3
+      .line()
+      .x((d) => x(new Date(d.Year)))
+      .y((d) => yTotal(d.Total));
+
     svg
       .append("path")
-      .datum(data)
+      .datum(preparedData)
       .attr("fill", "none")
       .attr("stroke", "blue")
       .attr("stroke-width", 2)
       .attr("d", totalLine);
 
-    // Add x-axis
+    // 添加 x 轴
     svg
       .append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
@@ -71,34 +79,36 @@ const LineChart = ({ data }) => {
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end");
 
-    // Add y-axis for GDP
+    // 添加 y 轴 - GDP
     svg
       .append("g")
       .attr("transform", `translate(${margin.left},0)`)
       .call(d3.axisLeft(yGDP))
       .append("text")
-      .attr("x", -height / 2)
-      .attr("y", -50)
+      .attr("x", -margin.left / 2)
+      .attr("y", margin.top)
       .attr("transform", "rotate(-90)")
       .attr("fill", "black")
       .attr("text-anchor", "middle")
-      .text("GDP (One Hundred Million)");
+      .text("GDP (Hundred Million)");
 
-    // Add y-axis for Total Emission
+    // 添加 y 轴 - Total Emission
     svg
       .append("g")
       .attr("transform", `translate(${width - margin.right},0)`)
       .call(d3.axisRight(yTotal))
       .append("text")
-      .attr("x", height / 2)
-      .attr("y", 40)
-      .attr("transform", "rotate(-90)")
+      .attr("x", -margin.right / 2)
+      .attr("y", height / 2)
+      .attr("transform", "rotate(90)")
       .attr("fill", "blue")
       .attr("text-anchor", "middle")
       .text("Total Emission (MT)");
 
-    // Add legend
-    const legend = svg.append("g").attr("transform", `translate(${width - 200}, ${margin.top})`);
+    // 添加图例
+    const legend = svg
+      .append("g")
+      .attr("transform", `translate(${width - 150}, ${margin.top})`);
 
     legend
       .append("rect")
@@ -107,6 +117,7 @@ const LineChart = ({ data }) => {
       .attr("width", 15)
       .attr("height", 15)
       .attr("fill", "black");
+
     legend
       .append("text")
       .attr("x", 20)
@@ -117,14 +128,15 @@ const LineChart = ({ data }) => {
     legend
       .append("rect")
       .attr("x", 0)
-      .attr("y", 20)
+      .attr("y", 25)
       .attr("width", 15)
       .attr("height", 15)
       .attr("fill", "blue");
+
     legend
       .append("text")
       .attr("x", 20)
-      .attr("y", 32)
+      .attr("y", 37)
       .text("Total Emission")
       .style("font-size", "12px");
   }, [data]);
